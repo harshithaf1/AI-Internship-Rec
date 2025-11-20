@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
+import { API_BASE } from "./config";
 
 const CompanyDashboard = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [applications, setApplications] = useState([]);
   const [internships, setInternships] = useState([]);
@@ -15,15 +19,15 @@ const CompanyDashboard = () => {
   const fetchData = async () => {
     try {
       // Fetch users
-      const usersRes = await fetch("http://localhost:5000/api/users/all");
+      const usersRes = await fetch(`${API_BASE}/api/users/all`);
       const usersData = await usersRes.json();
       
       // Fetch internships
-      const internshipsRes = await fetch("http://localhost:5000/api/internships");
+      const internshipsRes = await fetch(`${API_BASE}/api/internships`);
       const internshipsData = await internshipsRes.json();
       
       // Fetch applications
-      const appsRes = await fetch("http://localhost:5000/api/applications/all");
+      const appsRes = await fetch(`${API_BASE}/api/applications/all`);
       const appsData = await appsRes.json();
 
       setUsers(usersData.users || []);
@@ -65,8 +69,23 @@ const CompanyDashboard = () => {
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold">Company Portal</h1>
-          <p className="text-purple-100 mt-2">View and manage applicant details</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold">Company Portal</h1>
+              <p className="text-purple-100 mt-2">View and manage applicant details</p>
+            </div>
+            <button
+              onClick={() => {
+                localStorage.removeItem('userType');
+                localStorage.removeItem('companyToken');
+                navigate('/');
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition"
+            >
+              <LogOut className="w-5 h-5" />
+              <span>Logout</span>
+            </button>
+          </div>
         </div>
       </div>
 

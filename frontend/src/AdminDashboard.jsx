@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { API_BASE } from "./config";
 import { useAuth } from "./AuthContext";
 
 // --- MODIFIED ---
 // Added pagination icons
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [internships, setInternships] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -46,7 +49,7 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       // We now request a specific page, e.g., /api/internships?page=1
-      const res = await fetch(`http://localhost:5000/api/internships?page=${page}`);
+      const res = await fetch(`${API_BASE}/api/internships?page=${page}`);
       const data = await res.json();
 
       if (res.ok) {
@@ -72,7 +75,7 @@ const AdminDashboard = () => {
     setSuccess("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/internships", {
+      const res = await fetch(`${API_BASE}/api/internships`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -114,7 +117,7 @@ const AdminDashboard = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/internships/${id}`, {
+      const res = await fetch(`${API_BASE}/api/internships/${id}`, {
         method: "DELETE",
       });
 
@@ -140,7 +143,7 @@ const AdminDashboard = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/internships/delete_expired`, {
+      const res = await fetch(`${API_BASE}/api/internships/delete_expired`, {
         method: "DELETE",
       });
       const data = await res.json();
@@ -202,6 +205,17 @@ const AdminDashboard = () => {
                 className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition font-medium shadow-lg"
               >
                 {showAddForm ? "Cancel" : "+ Add Internship"}
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('userType');
+                  localStorage.removeItem('adminToken');
+                  navigate('/');
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
               </button>
             </div>
           </div>

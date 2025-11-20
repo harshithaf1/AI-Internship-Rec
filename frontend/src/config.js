@@ -1,1 +1,1 @@
-export const API_BASE_URL = 'https://ai-internship-rec.onrender.com';
+export const API_BASE = 'https://ai-internship-rec.onrender.com';
