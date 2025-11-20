@@ -24,22 +24,19 @@ app = Flask(__name__)
 # Replace the generic wildcard configuration with explicit origins.
 # You must replace YOUR_VERCEL_FRONTEND_URL with the actual URL from Vercel!
 # Example Vercel URL: https://ai-internship-hgop40ali-harshits-projects.vercel.app
-ALLOWED_ORIGINS = [
-    # REPLACE THIS with your specific Vercel URL
-    "https://ai-internship-hgop40ali-harshits-projects.vercel.app", 
-    # Add other possible Vercel domains if applicable
-    "https://ai-internship-rec.vercel.app", 
-    # Keep localhost for local development testing
-    "http://localhost:3000",
-    "http://127.0.0.1:5000"
-]
+# ============================================
+# CORS Configuration (TEMPORARY UNIVERSAL FIX)
+# ============================================
 
-CORS(app,
-     origins=ALLOWED_ORIGINS,
+# WARNING: This configuration is highly permissive and is for temporary
+# debugging ONLY. It allows ALL origins to access your API.
+# You must revert to the explicit list (ALLOWED_ORIGINS) after testing.
+
+CORS(app, 
+     resources={r"/*": {"origins": "*"}}, # Allows all origins on all / paths
      supports_credentials=True,
      allow_headers=["Content-Type", "Authorization"],
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
-
 # Configuration
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///internships.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
