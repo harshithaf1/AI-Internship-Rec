@@ -9,7 +9,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from flask_bcrypt import Bcrypt
+from werkzeug.security import generate_password_hash, check_password_hash
 import re
 
 # Load environment variables
@@ -17,9 +17,25 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# CORS Configuration
+# ============================================
+# CORS Configuration (FIXED FOR LIVE DEPLOYMENT)
+# ============================================
+
+# Replace the generic wildcard configuration with explicit origins.
+# You must replace YOUR_VERCEL_FRONTEND_URL with the actual URL from Vercel!
+# Example Vercel URL: https://ai-internship-hgop40ali-harshits-projects.vercel.app
+ALLOWED_ORIGINS = [
+    # REPLACE THIS with your specific Vercel URL
+    "https://ai-internship-hgop40ali-harshits-projects.vercel.app", 
+    # Add other possible Vercel domains if applicable
+    "https://ai-internship-rec.vercel.app", 
+    # Keep localhost for local development testing
+    "http://localhost:3000",
+    "http://127.0.0.1:5000"
+]
+
 CORS(app,
-     resources={r"/api/*": {"origins": "*"}},
+     origins=ALLOWED_ORIGINS,
      supports_credentials=True,
      allow_headers=["Content-Type", "Authorization"],
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
@@ -36,7 +52,13 @@ app.config['JWT_HEADER_TYPE'] = 'Bearer'
 
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
-bcrypt = Bcrypt(app)
+
+# Ensure database tables exist on startup (for production servers like Render)
+try:
+    with app.app_context():
+        db.create_all()
+except Exception as e:
+    print(f"DB init skipped/failed: {e}")
 
 # ============================================
 # DATABASE MODELS
@@ -59,10 +81,10 @@ class User(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     applications = db.relationship('Application', backref='user', lazy=True)
     def set_password(self, password):
-        self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+        self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
     def check_password(self, password):
         if self.password_hash is None: return False
-        return bcrypt.check_password_hash(self.password_hash, password)
+        return check_password_hash(self.password_hash, password)
     def to_dict_safe(self):
         return {'id': self.id, 'name': self.name, 'email': self.email, 'major': self.major, 'skills': self.skills, 'interests': self.interests, 'year': self.year, 'gpa': self.gpa, 'location_pref': self.location_pref, 'created_at': self.created_at.isoformat() if self.created_at else None}
 
@@ -77,8 +99,8 @@ def clean_db_string(s, field_name):
 
     s = str(s).strip()
 
-    # 1. Check for literal "No description available" (case-insensitive)
-    if field_name == 'description' and s.lower() == 'no description available':
+    # 1. Check for literal "No description available" or "Nothing" (case-insensitive)
+    if field_name == 'description' and (s.lower() == 'no description available' or s.lower() == 'nothing'):
         return ''
 
     # 2. Remove the pandas "dtype" junk (from anywhere in the string)
@@ -303,7 +325,7 @@ def update_user(user_id):
         
         # If you want to ensure at least one field was updated, you could add:
         # if not updated_something:
-        #    return jsonify({'error': 'No updateable fields provided'}), 400
+        # 	 return jsonify({'error': 'No updateable fields provided'}), 400
         
         user.updated_at = datetime.utcnow()
         db.session.commit()
