@@ -122,8 +122,7 @@ def _bootstrap_internships_if_empty(max_rows=None):
 
 try:
     with app.app_context():
-        db.create_all()
-        _bootstrap_internships_if_empty()  # Remove max_rows to import all
+        db.create_all()  # tables only; bootstrap deferred until models exist
 except Exception as e:
     print(f"DB init skipped/failed: {e}")
 
@@ -240,6 +239,15 @@ class Internship(db.Model):
             'is_active': self.is_active,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
+
+# Deferred bootstrap after all models are defined (works under gunicorn)
+@app.before_first_request
+def _run_bootstrap_once():
+    try:
+        with app.app_context():
+            _bootstrap_internships_if_empty()
+    except Exception as e:
+        print(f"Bootstrap hook error: {e}")
 
 
 class Application(db.Model):
