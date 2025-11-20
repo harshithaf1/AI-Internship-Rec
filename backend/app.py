@@ -51,9 +51,79 @@ db = SQLAlchemy(app)
 jwt = JWTManager(app)
 
 # Ensure database tables exist on startup (for production servers like Render)
+# and auto-import internships CSVs if empty (to avoid manual shell steps on Render free tier)
+def _bootstrap_internships_if_empty(max_rows=None):
+    """Populate internships table from bundled CSVs if empty.
+    Set max_rows to limit import (None = all). Safe to call multiple times."""
+    try:
+        count = Internship.query.count()
+        if count > 0:
+            print(f"➡️  Bootstrap skipped: {count} internships already present")
+            return
+        base_dir = os.path.dirname(__file__)
+        data_dir = os.path.join(base_dir, 'kaggle_data')
+        if not os.path.isdir(data_dir):
+            print("⚠️  kaggle_data directory not found; bootstrap skipped")
+            return
+        csv_files = [f for f in os.listdir(data_dir) if f.lower().endswith('.csv')]
+        if not csv_files:
+            print("⚠️  No CSV files in kaggle_data; bootstrap skipped")
+            return
+        print(f"📦 Bootstrapping internships from {len(csv_files)} CSV file(s)...")
+        imported = 0
+        for fname in csv_files:
+            path = os.path.join(data_dir, fname)
+            try:
+                # Try utf-8 then fallback
+                try:
+                    df = pd.read_csv(path, encoding='utf-8')
+                except Exception:
+                    df = pd.read_csv(path, encoding='latin-1')
+            except Exception as e:
+                print(f"   ⚠️  Skipping {fname}: {e}")
+                continue
+            # Normalize column names
+            df.columns = [c.lower().strip() for c in df.columns]
+            # Column resolution helpers
+            def col(*names, default=None):
+                for n in names:
+                    if n in df.columns:
+                        return df[n]
+                return default
+            # Build rows
+            for idx in range(len(df)):
+                if max_rows is not None and imported >= max_rows:
+                    break
+                company = str(col('company','company_name','employer','organization', default='Unknown')[idx])[:255]
+                title = str(col('title','internship_title','type_of_internship','profile','job_title','position','role','job_name', default='Untitled')[idx])[:255]
+                description = str(col('description','job_description','details','summary', default='No description available')[idx])[:500]
+                skills = str(col('skills','required_skills','qualifications','requirements', default='See description')[idx])[:300]
+                location = str(col('location','city','place','work_location', default='Not specified')[idx])[:255]
+                duration = str(col('duration','length','period', default='Not specified')[idx])[:100]
+                stipend = str(col('stipend','salary','compensation','pay', default='Competitive')[idx])[:100]
+                industry = str(col('industry','sector','category','field', default='Technology')[idx])[:100]
+                # Skip duplicates quickly
+                if Internship.query.filter_by(company=company, title=title).first():
+                    continue
+                internship = Internship(company=company, title=title, description=description, required_skills=skills,
+                                        location=location, duration=duration, stipend=stipend, deadline='Rolling', industry=industry)
+                db.session.add(internship)
+                imported += 1
+            if max_rows is not None and imported >= max_rows:
+                break
+        try:
+            db.session.commit()
+            print(f"✅ Bootstrap complete: {imported} internships imported")
+        except Exception as e:
+            db.session.rollback()
+            print(f"❌ Bootstrap commit failed: {e}")
+    except Exception as e:
+        print(f"❌ Bootstrap error: {e}")
+
 try:
     with app.app_context():
         db.create_all()
+        _bootstrap_internships_if_empty()  # Remove max_rows to import all
 except Exception as e:
     print(f"DB init skipped/failed: {e}")
 
