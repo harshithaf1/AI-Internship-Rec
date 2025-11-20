@@ -240,14 +240,12 @@ class Internship(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
-# Deferred bootstrap after all models are defined (works under gunicorn)
-@app.before_first_request
-def _run_bootstrap_once():
-    try:
-        with app.app_context():
-            _bootstrap_internships_if_empty()
-    except Exception as e:
-        print(f"Bootstrap hook error: {e}")
+# Run bootstrap immediately after models are declared (Flask 3 removed before_first_request)
+try:
+    with app.app_context():
+        _bootstrap_internships_if_empty()
+except Exception as e:
+    print(f"Bootstrap immediate error: {e}")
 
 
 class Application(db.Model):
