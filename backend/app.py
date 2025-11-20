@@ -120,11 +120,7 @@ def _bootstrap_internships_if_empty(max_rows=None):
     except Exception as e:
         print(f"❌ Bootstrap error: {e}")
 
-try:
-    with app.app_context():
-        db.create_all()  # tables only; bootstrap deferred until models exist
-except Exception as e:
-    print(f"DB init skipped/failed: {e}")
+"""NOTE: db.create_all() and bootstrap will run AFTER all models are defined below."""
 
 # ============================================
 # DATABASE MODELS
@@ -240,13 +236,6 @@ class Internship(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
-# Run bootstrap immediately after models are declared (Flask 3 removed before_first_request)
-try:
-    with app.app_context():
-        _bootstrap_internships_if_empty()
-except Exception as e:
-    print(f"Bootstrap immediate error: {e}")
-
 
 class Application(db.Model):
     # ... (Application model remains unchanged) ...
@@ -258,6 +247,14 @@ class Application(db.Model):
     applied_at = db.Column(db.DateTime, default=datetime.utcnow)
     def to_dict(self):
         return {'id': self.id, 'user_id': self.user_id, 'internship_id': self.internship_id, 'status': self.status, 'applied_at': self.applied_at.isoformat() if self.applied_at else None}
+
+# NOW that all models (User, Internship, Application) are defined, create tables and bootstrap.
+try:
+    with app.app_context():
+        db.create_all()
+        _bootstrap_internships_if_empty()
+except Exception as e:
+    print(f"DB init / bootstrap failed: {e}")
 
 # ============================================
 # RECOMMENDATION ENGINE (IMPROVED)
