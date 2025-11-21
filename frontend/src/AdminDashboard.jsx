@@ -186,23 +186,23 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-gray-600 mt-1">Manage internship listings</p>
+      <div className="bg-white shadow sticky top-0 z-50">
+        <div className="w-full mx-auto px-3 sm:px-4 py-3 sm:py-4 md:py-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Admin Dashboard</h1>
+              <p className="text-sm sm:text-base text-gray-600 mt-1">Manage internship listings</p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <button
                 onClick={checkAndDeleteExpired}
-                className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition font-medium"
+                className="px-3 sm:px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition text-sm sm:text-base font-medium flex-1 sm:flex-none"
               >
                 Delete Expired
               </button>
               <button
                 onClick={() => setShowAddForm(!showAddForm)}
-                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition font-medium shadow-lg"
+                className="px-3 sm:px-4 md:px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition text-sm sm:text-base font-medium shadow-lg flex-1 sm:flex-none"
               >
                 {showAddForm ? "Cancel" : "+ Add Internship"}
               </button>
@@ -212,36 +212,36 @@ const AdminDashboard = () => {
                   localStorage.removeItem('adminToken');
                   navigate('/');
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium"
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm sm:text-base font-medium"
               >
-                <LogOut className="w-4 h-4" />
-                Logout
+                <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Logout</span>
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8">
         {/* Success/Error Messages */}
         {success && (
-          <div className="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">
+          <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm sm:text-base">
             {success}
           </div>
         )}
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+          <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm sm:text-base">
             {error}
           </div>
         )}
 
         {/* Add Internship Form */}
         {showAddForm && (
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h2 className="text-2xl font-bold mb-6">Add New Internship</h2>
-            <form onSubmit={handleAddInternship} className="space-y-4">
+          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 md:mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Add New Internship</h2>
+            <form onSubmit={handleAddInternship} className="space-y-3 sm:space-y-4">
               {/* Form content is unchanged... */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Company Name *

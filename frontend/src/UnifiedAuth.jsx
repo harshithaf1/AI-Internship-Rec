@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
+import { API_BASE } from "./config";
 // --- ADDED ICONS ---
 import { Mail, Lock, LogIn, UserPlus, Briefcase, Award, TrendingUp, Loader2, Users } from 'lucide-react';
 
@@ -68,7 +69,7 @@ const UnifiedAuth = () => {
             setError("Invalid company credentials");
           }
         } else {
-          const res = await fetch("http://localhost:5000/api/auth/login", {
+          const res = await fetch(`${API_BASE}/api/auth/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(loginData),
@@ -105,7 +106,7 @@ const UnifiedAuth = () => {
       // --- END MODIFIED ---
 
       try {
-        const res = await fetch("http://localhost:5000/api/auth/signup", {
+        const res = await fetch(`${API_BASE}/api/auth/signup`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),

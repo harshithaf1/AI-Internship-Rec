@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { LogIn, UserPlus, Mail, Lock, User, BookOpen, Award, MapPin, Loader2, AlertCircle, Eye, EyeOff, Briefcase, TrendingUp, Users } from 'lucide-react';
 import { useAuth } from './AuthContext';
+import { API_BASE } from './config';
 
 const locationOptions = [
   "Remote",
@@ -58,7 +59,7 @@ export default function Auth() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -98,7 +99,7 @@ export default function Auth() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/signup', {
+      const response = await fetch(`${API_BASE}/api/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

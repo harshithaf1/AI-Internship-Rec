@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Briefcase, TrendingUp, Star, ExternalLink, User, BookOpen, Award, DollarSign, Calendar, Building2, CheckCircle, Loader2, AlertCircle, LogOut, ChevronLeft, ChevronRight, Edit, X } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import Auth from './Auth';
+import { API_BASE } from './config';
 
 // Copied options
 const locationOptions = [
@@ -75,7 +76,7 @@ function AuthenticatedApp() {
   const fetchInternships = async (page = 1) => {
     setLoadingInternships(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/internships?page=${page}&per_page=${perPage}`);
+      const response = await fetch(`${API_BASE}/api/internships?page=${page}&per_page=${perPage}`);
       const data = await response.json();
       if (response.ok) {
         setAllInternships(data.internships || []);
@@ -92,7 +93,7 @@ function AuthenticatedApp() {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch(`http://localhost:5000/api/recommendations/${user.id}`, {
+      const response = await fetch(`${API_BASE}/api/recommendations/${user.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -118,7 +119,7 @@ function AuthenticatedApp() {
 
   const handleApplication = async (internshipId, status) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/applications`, {
+      const response = await fetch(`${API_BASE}/api/applications`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ user_id: user.id, internship_id: internshipId, status: status }),
@@ -167,7 +168,7 @@ function AuthenticatedApp() {
     };
 
     try {
-      const response = await fetch(`http://localhost:5000/api/users/${user.id}`, {
+      const response = await fetch(`${API_BASE}/api/users/${user.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -209,20 +210,20 @@ function AuthenticatedApp() {
   };
 
   return (
-    <div className="w-screen min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-x-hidden">
+    <div className="w-full min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 overflow-x-hidden">
       <header className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-white p-2 rounded-lg shadow-lg">
-                <Briefcase className="w-6 h-6 text-blue-600" />
+        <div className="w-full mx-auto px-3 sm:px-4 py-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="bg-white p-1.5 sm:p-2 rounded-lg shadow-lg flex-shrink-0">
+                <Briefcase className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">InternMatch AI</h1>
-                <p className="text-xs text-blue-200">Welcome, {user.name}!</p>
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-xl md:text-2xl font-bold text-white truncate">InternMatch AI</h1>
+                <p className="text-[10px] sm:text-xs text-blue-200 truncate">Welcome, {user.name}!</p>
               </div>
             </div>
-            <nav className="flex gap-2 items-center">
+            <nav className="hidden md:flex gap-2 items-center">
               <button
                 onClick={() => setCurrentView('profile')}
                 className={`px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 ${
@@ -269,52 +270,90 @@ function AuthenticatedApp() {
                 <LogOut className="w-4 h-4" /> Logout
               </button>
             </nav>
+            
+            {/* Mobile Navigation */}
+            <div className="flex md:hidden gap-1.5 items-center flex-shrink-0">
+              <button
+                onClick={() => setCurrentView('profile')}
+                className={`p-1.5 rounded-lg transition ${currentView === 'profile' ? 'bg-blue-600 text-white' : 'bg-white/90 text-gray-700'}`}
+              >
+                <User className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {
+                  if (recommendations.length > 0) { setCurrentView('recommendations'); }
+                  else { fetchRecommendations(); }
+                }}
+                className={`p-1.5 rounded-lg relative transition ${currentView === 'recommendations' ? 'bg-blue-600 text-white' : 'bg-white/90 text-gray-700'}`}
+              >
+                <Star className="w-4 h-4" />
+                {recommendations.length > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold">
+                    {recommendations.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setCurrentView('browse')}
+                className={`p-1.5 rounded-lg transition ${currentView === 'browse' ? 'bg-blue-600 text-white' : 'bg-white/90 text-gray-700'}`}
+              >
+                <Search className="w-4 h-4" />
+              </button>
+              <button
+                onClick={logout}
+                className="p-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Alerts */}
       {error && (
-        <div className="max-w-7xl mx-auto px-4 mt-4">
-          <div className="bg-red-900/80 border border-red-600 rounded-lg p-4 flex items-center gap-3 backdrop-blur-sm">
-            <AlertCircle className="w-5 h-5 text-red-400" />
-            <p className="text-red-100">{error}</p>
-            <button onClick={() => setError('')} className="ml-auto text-red-300 hover:text-red-100 text-2xl">&times;</button>
+        <div className="w-full mx-auto px-3 sm:px-4 mt-3">
+          <div className="bg-red-900/80 border border-red-600 rounded-lg p-3 flex items-center gap-2 backdrop-blur-sm">
+            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 flex-shrink-0" />
+            <p className="text-red-100 text-sm flex-1 min-w-0">{error}</p>
+            <button onClick={() => setError('')} className="text-red-300 hover:text-red-100 text-xl flex-shrink-0">&times;</button>
           </div>
         </div>
       )}
       {success && (
-        <div className="max-w-7xl mx-auto px-4 mt-4">
-          <div className="bg-green-900/80 border border-green-600 rounded-lg p-4 flex items-center gap-3 backdrop-blur-sm">
-            <CheckCircle className="w-5 h-5 text-green-400" />
-            <p className="text-green-100">{success}</p>
-            <button onClick={() => setSuccess('')} className="ml-auto text-green-300 hover:text-green-100 text-2xl">&times;</button>
+        <div className="w-full mx-auto px-3 sm:px-4 mt-3">
+          <div className="bg-green-900/80 border border-green-600 rounded-lg p-3 flex items-center gap-2 backdrop-blur-sm">
+            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-400 flex-shrink-0" />
+            <p className="text-green-100 text-sm flex-1 min-w-0">{success}</p>
+            <button onClick={() => setSuccess('')} className="text-green-300 hover:text-green-100 text-xl flex-shrink-0">&times;</button>
           </div>
         </div>
       )}
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {currentView === 'profile' ? (
-          <form onSubmit={handleProfileUpdate} className="bg-white rounded-2xl shadow-xl p-8 border">
-            <div className="mb-8 flex justify-between items-center">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-                  <div className="bg-blue-100 p-2 rounded-lg"> <User className="w-6 h-6 text-blue-600" /> </div>
-                  Your Profile
+          <form onSubmit={handleProfileUpdate} className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 border">
+            <div className="mb-4 sm:mb-6 md:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2 sm:gap-3">
+                  <div className="bg-blue-100 p-1.5 sm:p-2 rounded-lg flex-shrink-0"> 
+                    <User className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" /> 
+                  </div>
+                  <span className="truncate">Your Profile</span>
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-sm sm:text-base text-gray-600">
                   {isEditing ? "Update your profile details below." : "This is your AI-powered profile."}
                 </p>
               </div>
               {!isEditing && (
                 <button type="button" onClick={() => setIsEditing(true)}
-                  className="px-4 py-2 rounded-lg font-medium transition bg-blue-600 text-white hover:bg-blue-700 shadow-sm flex items-center gap-2"
-                > <Edit className="w-4 h-4" /> Edit Profile
+                  className="px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition bg-blue-600 text-white hover:bg-blue-700 shadow-sm flex items-center gap-2 flex-shrink-0"
+                > <Edit className="w-3 h-3 sm:w-4 sm:h-4" /> Edit Profile
                 </button>
               )}
             </div>
-            <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
               <div className="bg-gray-100 p-4 rounded-lg">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Name</label>
                 <p className="text-gray-900">{user.name}</p>
@@ -438,27 +477,31 @@ function AuthenticatedApp() {
           </form>
         ) : currentView === 'recommendations' ? (
           <div>
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-                <div className="bg-purple-100 p-2 rounded-lg"> <Star className="w-6 h-6 text-purple-600" /> </div>
-                Your Personalized Matches
+            <div className="mb-4 sm:mb-6 md:mb-8">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-2 sm:gap-3">
+                <div className="bg-purple-100 p-1.5 sm:p-2 rounded-lg flex-shrink-0"> 
+                  <Star className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" /> 
+                </div>
+                <span className="truncate">Your Personalized Matches</span>
               </h2>
-              <p className="text-blue-200">
+              <p className="text-sm sm:text-base text-blue-200">
                 {recommendations.length > 0 ? `We found ${recommendations.length} internships perfectly tailored to your profile` : 'Click "Get My Recommendations" to see personalized matches'}
               </p>
             </div>
             {recommendations.length === 0 ? (
-              <div className="bg-white rounded-2xl shadow-lg p-12 text-center border">
-                <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"> <Search className="w-8 h-8 text-blue-600" /> </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">No Recommendations Yet</h3>
-                <p className="text-gray-600 mb-6">Click the button below to get AI-powered internship matches</p>
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-6 sm:p-8 md:p-12 text-center border">
+                <div className="bg-blue-100 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-4"> 
+                  <Search className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" /> 
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">No Recommendations Yet</h3>
+                <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">Click the button below to get AI-powered internship matches</p>
                 <button onClick={fetchRecommendations} disabled={loading}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+                  className="bg-blue-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base font-semibold hover:bg-blue-700 transition disabled:opacity-50"
                 > {loading ? 'Loading...' : 'Get Recommendations'}
                 </button>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-3 sm:space-y-4 md:space-y-6">
                 {recommendations.map((rec) => (
                   <div key={rec.rank} className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition border-2 border-transparent hover:border-blue-300">
                     <div className="flex items-start justify-between mb-4">
@@ -535,24 +578,26 @@ function AuthenticatedApp() {
           </div>
         ) : (
           <div>
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-                <div className="bg-green-100 p-2 rounded-lg"> <BookOpen className="w-6 h-6 text-green-600" /> </div>
-                Browse All Internships
+            <div className="mb-4 sm:mb-6 md:mb-8">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-2 sm:gap-3">
+                <div className="bg-green-100 p-1.5 sm:p-2 rounded-lg flex-shrink-0"> 
+                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" /> 
+                </div>
+                <span className="truncate">Browse All Internships</span>
               </h2>
-              <div className="flex items-center justify-between">
-                <p className="text-blue-200">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <p className="text-sm sm:text-base text-blue-200">
                   Showing {allInternships.length} of {totalCount.toLocaleString()} internship opportunities
                 </p>
                 {totalPages > 1 && (
-                  <p className="text-sm text-blue-300"> Page {currentPage} of {totalPages} </p>
+                  <p className="text-xs sm:text-sm text-blue-300"> Page {currentPage} of {totalPages} </p>
                 )}
               </div>
             </div>
             {loadingInternships ? (
-              <div className="bg-white rounded-2xl shadow-lg p-12 text-center border">
-                <Loader2 className="w-12 h-12 text-gray-400 mx-auto mb-4 animate-spin" />
-                <p className="text-gray-600">Loading internships...</p>
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-6 sm:p-8 md:p-12 text-center border">
+                <Loader2 className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-4 animate-spin" />
+                <p className="text-sm sm:text-base text-gray-600">Loading internships...</p>
               </div>
             ) : allInternships.length === 0 ? (
               <div className="bg-white rounded-2xl shadow-lg p-12 text-center border">
